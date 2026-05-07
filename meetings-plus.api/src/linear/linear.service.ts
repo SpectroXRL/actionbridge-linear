@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { LinearClient } from '@linear/sdk';
 import { AiService } from 'src/ai/ai.service';
-import { getLinearSchemas, LinearIssues } from './linear-schema.interface';
+import { getLinearSchemas, LinearIssue } from './linear-schema.interface';
 
 interface TranscriptDto {
   teamId: string;
@@ -35,9 +35,38 @@ export class LinearService {
     return this.accessToken !== null;
   }
 
-  async extractIssues(content: string | undefined): Promise<LinearIssues> {
+  async pullLinearMetadata(): Promise<{
+    states: Array<{ id: string; name: string }>;
+    labels: Array<{ id: string; name: string }>;
+  }> {
+    const [workflowStates, issueLabels] = await Promise.all([
+      this.linearClient.workflowStates(),
+      this.linearClient.issueLabels(),
+    ]);
+
+    const states = workflowStates.nodes.map((s) => ({
+      id: s.id,
+      name: s.name,
+    }));
+    const labels = issueLabels.nodes.map((l) => ({ id: l.id, name: l.name }));
+
+    return { states, labels };
+  }
+
+  async extractIssues(content: string | undefined): Promise<{
+    issues: LinearIssue[];
+    meta: {
+      states: Array<{ id: string; name: string }>;
+      labels: Array<{ id: string; name: string }>;
+    };
+  }> {
+    const meta = await this.pullLinearMetadata();
     const { linearIssuesSchema } = await getLinearSchemas();
-    return await this.aiService.generateItems(content, linearIssuesSchema);
+    const { issues } = await this.aiService.generateItems(
+      content,
+      linearIssuesSchema,
+    );
+    return { issues, meta };
   }
 
   async createIssues(
