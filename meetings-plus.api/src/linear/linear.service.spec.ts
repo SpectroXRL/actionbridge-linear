@@ -1,14 +1,17 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { LinearService } from './linear.service';
 import { AiService } from '../ai/ai.service';
+import { LinearIssue } from './linear-schema.interface';
 
 const mockWorkflowStates = jest.fn();
 const mockIssueLabels = jest.fn();
+const mockCreateIssueBatch = jest.fn();
 
 jest.mock('@linear/sdk', () => ({
   LinearClient: jest.fn().mockImplementation(() => ({
     workflowStates: mockWorkflowStates,
     issueLabels: mockIssueLabels,
+    createIssueBatch: mockCreateIssueBatch,
   })),
 }));
 
@@ -21,6 +24,8 @@ describe('LinearService', () => {
 
   beforeEach(async () => {
     jest.clearAllMocks();
+
+    mockCreateIssueBatch.mockResolvedValue({});
 
     mockWorkflowStates.mockResolvedValue({
       nodes: [
@@ -92,6 +97,85 @@ describe('LinearService', () => {
       const result = await service.extractIssues('content');
 
       expect(result.issues).toEqual(fakeIssues);
+    });
+  });
+
+  describe('submitIssues()', () => {
+    it('calls createIssueBatch with issues augmented by teamId and projectId when both are provided', async () => {
+      const issue = {
+        title: 'Fix login',
+        description: 'Login fails on mobile',
+        stateId: 'state-1',
+      };
+
+      await service.submitIssues({
+        issues: [issue],
+        teamId: 'team-1',
+        projectId: 'proj-1',
+      });
+
+      expect(mockCreateIssueBatch).toHaveBeenCalledWith({
+        issues: [{ ...issue, teamId: 'team-1', projectId: 'proj-1' }],
+      });
+    });
+
+    it('omits projectId from each issue when projectId is empty string', async () => {
+      const issue = {
+        title: 'Fix login',
+        description: 'Login fails on mobile',
+        stateId: 'state-1',
+      };
+
+      await service.submitIssues({
+        issues: [issue],
+        teamId: 'team-1',
+        projectId: '',
+      });
+
+      expect(mockCreateIssueBatch).toHaveBeenCalledWith({
+        issues: [{ ...issue, teamId: 'team-1' }],
+      });
+    });
+
+    it('does not call createIssueBatch when issues array is empty', async () => {
+      await service.submitIssues({
+        issues: [],
+        teamId: 'team-1',
+        projectId: '',
+      });
+
+      expect(mockCreateIssueBatch).not.toHaveBeenCalled();
+    });
+
+    it('throws and does not call createIssueBatch when an issue is missing title', async () => {
+      const invalidIssue = {
+        description: 'no title here',
+        stateId: 'state-1',
+      } as unknown as LinearIssue;
+
+      await expect(
+        service.submitIssues({
+          issues: [invalidIssue],
+          teamId: 'team-1',
+          projectId: '',
+        }),
+      ).rejects.toThrow();
+
+      expect(mockCreateIssueBatch).not.toHaveBeenCalled();
+    });
+
+    it('throws and does not call createIssueBatch when teamId is empty', async () => {
+      const issue = {
+        title: 'Fix login',
+        description: 'desc',
+        stateId: 'state-1',
+      };
+
+      await expect(
+        service.submitIssues({ issues: [issue], teamId: '', projectId: '' }),
+      ).rejects.toThrow();
+
+      expect(mockCreateIssueBatch).not.toHaveBeenCalled();
     });
   });
 });

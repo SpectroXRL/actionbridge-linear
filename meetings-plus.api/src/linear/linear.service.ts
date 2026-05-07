@@ -1,12 +1,21 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { LinearClient } from '@linear/sdk';
+import z from 'zod';
 import { AiService } from 'src/ai/ai.service';
 import { getLinearSchemas, LinearIssue } from './linear-schema.interface';
 
-interface TranscriptDto {
-  teamId: string;
-  projectId: string;
-}
+const submitIssuesBodySchema = z.object({
+  issues: z.array(
+    z.object({
+      title: z.string(),
+      description: z.string(),
+      stateId: z.string(),
+      labelIds: z.array(z.string()).optional(),
+    }),
+  ),
+  teamId: z.string().min(1),
+  projectId: z.string(),
+});
 
 @Injectable()
 export class LinearService {
@@ -69,34 +78,23 @@ export class LinearService {
     return { issues, meta };
   }
 
-  async createIssues(
-    content: string | undefined,
-    body: TranscriptDto,
-  ): Promise<void> {
-    if (body.teamId) {
-      const extractedData = await this.extractIssues(content);
+  async submitIssues(body: {
+    issues: LinearIssue[];
+    teamId: string;
+    projectId: string;
+  }): Promise<void> {
+    const parsed = submitIssuesBodySchema.safeParse(body);
+    if (!parsed.success) throw new BadRequestException(parsed.error.flatten());
 
-      console.log('start creating...');
-      let issuesWithTeam = extractedData.issues.map((issue) => ({
-        ...issue,
-        teamId: body.teamId,
-      }));
+    if (body.issues.length === 0) return;
 
-      if (body.projectId !== '') {
-        issuesWithTeam = extractedData.issues.map((issue) => ({
-          ...issue,
-          teamId: body.teamId,
-          projectId: body.projectId,
-        }));
-      }
+    const issuesWithTeam = body.issues.map((issue) => ({
+      ...issue,
+      teamId: body.teamId,
+      ...(body.projectId !== '' ? { projectId: body.projectId } : {}),
+    }));
 
-      await this.linearClient.createIssueBatch({
-        issues: issuesWithTeam,
-      });
-      console.log('issue created');
-    } else {
-      console.log('Team not found');
-    }
+    await this.linearClient.createIssueBatch({ issues: issuesWithTeam });
   }
 
   async getTeams() {

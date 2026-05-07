@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
   Post,
   Query,
   Res,
@@ -11,6 +12,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { FileService } from 'src/file/file.service';
 import { LinearService } from './linear.service';
+import { LinearIssue } from './linear-schema.interface';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
 
@@ -86,5 +88,13 @@ export class LinearController {
   @Get('projects')
   async getProjects(@Query('teamId') teamId: string) {
     return await this.linearService.getProjects(teamId);
+  }
+
+  @Post('issues')
+  @HttpCode(204)
+  async postIssues(
+    @Body() body: { issues: LinearIssue[]; teamId: string; projectId: string },
+  ): Promise<void> {
+    return this.linearService.submitIssues(body);
   }
 }
