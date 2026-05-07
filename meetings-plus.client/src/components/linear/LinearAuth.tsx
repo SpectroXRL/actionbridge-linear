@@ -1,5 +1,6 @@
+import { API_BASE_URL } from "../../config";
 const CLIENT_ID = import.meta.env.VITE_LINEAR_CLIENT_ID;
-const REDIRECT_URI = "http://localhost:3000/linear/callback";
+const REDIRECT_URI = `${API_BASE_URL}/linear/callback`;
 const SCOPE = "read,write";
 
 const handleLinearAuth = () => {

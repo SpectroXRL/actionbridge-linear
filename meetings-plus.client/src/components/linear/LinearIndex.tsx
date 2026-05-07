@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { API_BASE_URL } from "../../config";
 
 type Team = {
   nodes: Node[];
@@ -19,7 +20,7 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
   const form = e.currentTarget;
   const formData = new FormData(form);
 
-  await fetch("http://localhost:3000/linear/transcript", {
+  await fetch(`${API_BASE_URL}/linear/transcript`, {
     method: "POST",
     body: formData,
   });
@@ -34,7 +35,7 @@ const LinearIndex = () => {
     const teamId = teamSelect.current?.value;
     if (teamId !== "") {
       const res = await fetch(
-        `http://localhost:3000/linear/projects?teamId=${teamId}`,
+        `${API_BASE_URL}/linear/projects?teamId=${teamId}`,
       );
       const data: Project = await res.json();
       setProjects(data.nodes);
@@ -45,7 +46,7 @@ const LinearIndex = () => {
 
   useEffect(() => {
     async function getTeams() {
-      const res = await fetch("http://localhost:3000/linear/teams");
+      const res = await fetch(`${API_BASE_URL}/linear/teams`);
       const data: Team = await res.json();
       setTeams(data.nodes);
     }
