@@ -1,18 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { ZodSchema } from 'zod';
-import { GoogleGenAI } from '@google/genai';
+import OpenAI from 'openai';
+import { zodResponseFormat } from 'openai/helpers/zod';
 
 @Injectable()
 export class AiService {
-  private readonly ai: GoogleGenAI;
+  private readonly ai: OpenAI;
   private readonly basePrompt: string;
 
   constructor() {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      console.error('GEMINI_API_KEY is not set!');
-    }
-    this.ai = new GoogleGenAI({ apiKey });
+    this.ai = new OpenAI();
 
     this.basePrompt = `
         Given a meeting summary extract all the tasks according to the response schema specified:
@@ -26,15 +23,13 @@ export class AiService {
     customPrompt?: string,
   ): Promise<T> {
     const prompt = customPrompt ?? this.basePrompt;
-    const response = await this.ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
-      contents: prompt + content,
-      config: {
-        responseMimeType: 'application/json',
-        responseJsonSchema: schema.toJSONSchema(),
-      },
+    const response = await this.ai.chat.completions.parse({
+      model: 'gpt-4o-mini',
+      messages: [{ role: 'user', content: prompt + content }],
+      response_format: zodResponseFormat(schema, 'result'),
     });
 
-    return schema.parse(JSON.parse(response.text ?? '{}'));
+    const parsed = response.choices[0].message.parsed;
+    return schema.parse(parsed);
   }
 }
