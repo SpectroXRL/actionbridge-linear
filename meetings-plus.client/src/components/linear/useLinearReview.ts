@@ -8,11 +8,15 @@ export interface LinearIssue {
   description?: string;
   teamId: string;
   projectId?: string;
+  stateId?: string;
+  labelIds?: string[];
 }
 
 export interface ExtractMeta {
   teamId: string;
   projectId?: string;
+  states?: { id: string; name: string }[];
+  labels?: { id: string; name: string }[];
 }
 
 export function useLinearReview() {
