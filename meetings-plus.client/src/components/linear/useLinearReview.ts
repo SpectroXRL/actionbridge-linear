@@ -33,6 +33,8 @@ export function useLinearReview() {
     rejectedIndices,
     error,
     extract: async (formData: FormData) => {
+      const teamId = (formData.get('teamId') as string) ?? '';
+      const projectId = (formData.get('projectId') as string) ?? '';
       setError(null);
       setStage('extracting');
       try {
@@ -43,7 +45,7 @@ export function useLinearReview() {
         if (!res.ok) throw new Error('Extract failed');
         const data = await res.json();
         setExtractedIssues(data.issues);
-        setMeta(data.meta);
+        setMeta({ ...data.meta, teamId, projectId });
         setStage('review');
       } catch (e) {
         setError(e instanceof Error ? e.message : 'Unknown error');
@@ -70,7 +72,7 @@ export function useLinearReview() {
         const res = await fetch(`${API_BASE_URL}/linear/issues`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ issues: approved }),
+          body: JSON.stringify({ issues: approved, teamId: meta?.teamId ?? '', projectId: meta?.projectId ?? '' }),
         });
         if (!res.ok) throw new Error('Submit failed');
         setStage('done');

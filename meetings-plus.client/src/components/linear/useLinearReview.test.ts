@@ -22,16 +22,22 @@ describe('useLinearReview', () => {
   it('extract() transitions to "review" with issues on success', async () => {
     const { result } = renderHook(() => useLinearReview());
     const issues = [{ title: 'Issue 1', teamId: 't1' }];
-    const meta = { teamId: 't1' };
-    mockExtractSuccess(issues, meta);
+    const serverMeta = { states: [], labels: [] };
+    vi.mocked(fetch).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ issues, meta: serverMeta }),
+    } as Response);
 
+    const fd = new FormData();
+    fd.set('teamId', 't1');
+    fd.set('projectId', 'p1');
     await act(async () => {
-      await result.current.extract(new FormData());
+      await result.current.extract(fd);
     });
 
     expect(result.current.stage).toBe('review');
     expect(result.current.extractedIssues).toEqual(issues);
-    expect(result.current.meta).toEqual(meta);
+    expect(result.current.meta).toEqual({ ...serverMeta, teamId: 't1', projectId: 'p1' });
   });
 
   it('extract() returns to "form" and sets error on failure', async () => {
@@ -97,7 +103,7 @@ describe('useLinearReview', () => {
     expect(fetch).toHaveBeenCalledTimes(1); // only the extract call
   });
 
-  it('submit() POSTs only approved issues and transitions to "done"', async () => {
+  it('submit() POSTs only approved issues with teamId and projectId, and transitions to "done"', async () => {
     const { result } = renderHook(() => useLinearReview());
     const issues = [
       { title: 'Keep', teamId: 't1' },
@@ -106,8 +112,11 @@ describe('useLinearReview', () => {
     mockExtractSuccess(issues);
     vi.mocked(fetch).mockResolvedValueOnce({ ok: true } as Response);
 
+    const fd = new FormData();
+    fd.set('teamId', 't1');
+    fd.set('projectId', 'p1');
     await act(async () => {
-      await result.current.extract(new FormData());
+      await result.current.extract(fd);
     });
     act(() => result.current.toggleIssue(1)); // reject index 1
 
@@ -119,6 +128,8 @@ describe('useLinearReview', () => {
     const submitCall = vi.mocked(fetch).mock.calls[1];
     const body = JSON.parse(submitCall[1]?.body as string);
     expect(body.issues).toEqual([{ title: 'Keep', teamId: 't1' }]);
+    expect(body.teamId).toBe('t1');
+    expect(body.projectId).toBe('p1');
   });
 
   it('submit() stays on "review" and sets error on fetch failure', async () => {
