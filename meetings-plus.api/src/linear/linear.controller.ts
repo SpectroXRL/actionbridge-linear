@@ -29,15 +29,15 @@ export class LinearController {
     private readonly configService: ConfigService,
   ) {}
 
-  @Post('/transcript')
+  @Post('/extract')
   @UseInterceptors(FileInterceptor('transcript'))
-  async postTranscript(
+  async postExtract(
     @Body() body: TranscriptDto,
     @UploadedFile()
     file?: Express.Multer.File,
-  ): Promise<void> {
+  ) {
     const content = this.fileService.processContent(file);
-    await this.linearService.createIssues(content, body);
+    return this.linearService.extractIssues(content);
   }
 
   @Get('callback')
