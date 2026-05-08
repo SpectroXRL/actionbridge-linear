@@ -1,6 +1,7 @@
 import { renderHook, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useLinearReview } from './useLinearReview';
+import type { LinearIssue } from './useLinearReview';
 
 beforeEach(() => {
   vi.stubGlobal('fetch', vi.fn());
@@ -166,4 +167,20 @@ describe('useLinearReview', () => {
     expect(result.current.stage).toBe('form');
   });
 });
+
+// Compile-time drift assertions: ensure LinearIssue stays aligned with
+// the backend linearIssueBaseSchema output shape. These functions are
+// never called — they exist only to fail compilation if the shapes diverge.
+type BackendLinearIssue = {
+  title: string;
+  description: string;
+  stateId: string;
+  labelIds?: string[];
+};
+
+const _assertBackendToFrontend: (x: BackendLinearIssue) => LinearIssue = (x) => x;
+const _assertFrontendToBackend: (x: LinearIssue) => BackendLinearIssue = (x) => x;
+
+void _assertBackendToFrontend;
+void _assertFrontendToBackend;
 
