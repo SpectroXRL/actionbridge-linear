@@ -52,6 +52,7 @@ export function createLinearIssueSchema(
       ),
     labelIds: z
       .array(z.string())
+      .nullable()
       .optional()
       .describe(
         'The optional label ids to apply to this issue, use the ids given: ' +

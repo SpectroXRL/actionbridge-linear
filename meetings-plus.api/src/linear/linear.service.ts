@@ -10,7 +10,7 @@ const submitIssuesBodySchema = z.object({
       title: z.string(),
       description: z.string(),
       stateId: z.string(),
-      labelIds: z.array(z.string()).optional(),
+      labelIds: z.array(z.string()).nullable().optional(),
     }),
   ),
   teamId: z.string().min(1),
@@ -86,12 +86,15 @@ export class LinearService {
     const parsed = submitIssuesBodySchema.safeParse(body);
     if (!parsed.success) throw new BadRequestException(parsed.error.flatten());
 
-    if (body.issues.length === 0) return;
+    if (parsed.data.issues.length === 0) return;
 
-    const issuesWithTeam = body.issues.map((issue) => ({
+    const issuesWithTeam = parsed.data.issues.map(({ labelIds, ...issue }) => ({
       ...issue,
-      teamId: body.teamId,
-      ...(body.projectId !== '' ? { projectId: body.projectId } : {}),
+      teamId: parsed.data.teamId,
+      ...(parsed.data.projectId !== ''
+        ? { projectId: parsed.data.projectId }
+        : {}),
+      ...(labelIds != null ? { labelIds } : {}),
     }));
 
     await this.linearClient.createIssueBatch({ issues: issuesWithTeam });
