@@ -137,6 +137,33 @@ describe('LinearService', () => {
       });
     });
 
+    it('omits labelIds when it is null to avoid SDK batch submission errors', async () => {
+      const issueWithNullLabelIds = {
+        title: 'Fix login',
+        description: 'Login fails on mobile',
+        stateId: 'state-1',
+        labelIds: null,
+      } as unknown as LinearIssue;
+
+      await service.submitIssues({
+        issues: [issueWithNullLabelIds],
+        teamId: 'team-1',
+        projectId: 'proj-1',
+      });
+
+      expect(mockCreateIssueBatch).toHaveBeenCalledWith({
+        issues: [
+          {
+            title: 'Fix login',
+            description: 'Login fails on mobile',
+            stateId: 'state-1',
+            teamId: 'team-1',
+            projectId: 'proj-1',
+          },
+        ],
+      });
+    });
+
     it('does not call createIssueBatch when issues array is empty', async () => {
       await service.submitIssues({
         issues: [],
