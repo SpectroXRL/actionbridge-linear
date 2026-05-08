@@ -47,19 +47,17 @@ export function createLinearIssueSchema(
   statesInfo: string,
   labelsInfo: string,
 ) {
-  return z.object({
-    title: z.string().describe('Title of the task/issue'),
-    description: z
-      .string()
-      .describe(
-        'A short description giving details supporting the issue title',
-      ),
-    stateId: z
-      .string()
-      .describe(
-        'The state id representing the current workflow state this item is in, use key words that would give you clues into what the state is like similes between the word and the states use the ids given: ' +
-          statesInfo,
-      ),
+  return linearIssueBaseSchema.extend({
+    title: linearIssueBaseSchema.shape.title.describe(
+      'Title of the task/issue',
+    ),
+    description: linearIssueBaseSchema.shape.description.describe(
+      'A short description giving details supporting the issue title',
+    ),
+    stateId: linearIssueBaseSchema.shape.stateId.describe(
+      'The state id representing the current workflow state this item is in, use key words that would give you clues into what the state is like similes between the word and the states use the ids given: ' +
+        statesInfo,
+    ),
     labelIds: z
       .array(z.string())
       .nullable()
