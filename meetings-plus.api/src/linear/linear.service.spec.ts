@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { LinearService } from './linear.service';
 import { AiService } from '../ai/ai.service';
-import { LinearIssue } from './linear-schema.interface';
+import { linearIssueBaseSchema } from './linear-schema.interface';
 
 const mockWorkflowStates = jest.fn();
 const mockIssueLabels = jest.fn();
@@ -138,12 +138,12 @@ describe('LinearService', () => {
     });
 
     it('omits labelIds when it is null to avoid SDK batch submission errors', async () => {
-      const issueWithNullLabelIds = {
+      const issueWithNullLabelIds = linearIssueBaseSchema.parse({
         title: 'Fix login',
         description: 'Login fails on mobile',
         stateId: 'state-1',
         labelIds: null,
-      } as unknown as LinearIssue;
+      });
 
       await service.submitIssues({
         issues: [issueWithNullLabelIds],
@@ -175,13 +175,15 @@ describe('LinearService', () => {
     });
 
     it('throws and does not call createIssueBatch when an issue is missing title', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const invalidIssue = {
         description: 'no title here',
         stateId: 'state-1',
-      } as unknown as LinearIssue;
+      } as any;
 
       await expect(
         service.submitIssues({
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           issues: [invalidIssue],
           teamId: 'team-1',
           projectId: '',
