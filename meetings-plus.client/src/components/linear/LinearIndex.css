@@ -1,0 +1,192 @@
+.issue-review {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 2rem;
+  border-radius: 12px;
+  background-color: #1e1e1e;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  min-width: 320px;
+  max-width: 640px;
+}
+
+.issue-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* Individual issue card */
+.issue-card {
+  padding: 1rem 1.25rem;
+  border-radius: 10px;
+  background-color: #2a2a2a;
+  border: 1px solid #3a3a3a;
+  transition: opacity 0.2s ease, border-color 0.2s ease;
+}
+
+.issue-card:not(.issue-card--rejected) {
+  border-color: rgba(100, 108, 255, 0.3);
+}
+
+.issue-card--rejected {
+  opacity: 0.4;
+}
+
+/* Header row: custom checkbox + title */
+.issue-card__header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Hide native checkbox */
+.issue-checkbox {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  margin: 0;
+}
+
+/* Custom checkbox box */
+.issue-checkbox__ui {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  border: 2px solid #555;
+  background-color: transparent;
+  position: relative;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.issue-checkbox:checked + .issue-checkbox__ui {
+  background-color: #646cff;
+  border-color: #646cff;
+}
+
+/* Checkmark via pseudo-element */
+.issue-checkbox:checked + .issue-checkbox__ui::after {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 1px;
+  width: 5px;
+  height: 9px;
+  border: 2px solid white;
+  border-top: none;
+  border-left: none;
+  transform: rotate(45deg);
+}
+
+.issue-checkbox:disabled + .issue-checkbox__ui {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.issue-card__title {
+  font-size: 0.95rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+/* Description aligned under title */
+.issue-card__description {
+  margin: 0.6rem 0 0 0;
+  padding-left: calc(18px + 0.75rem);
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.55);
+  line-height: 1.5;
+}
+
+/* State + label badges */
+.issue-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+  padding-left: calc(18px + 0.75rem);
+}
+
+.issue-state,
+.issue-label {
+  display: inline-block;
+  padding: 0.2em 0.65em;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.issue-state {
+  background-color: rgba(100, 108, 255, 0.15);
+  color: #a0a8ff;
+}
+
+.issue-label {
+  background-color: rgba(80, 200, 120, 0.12);
+  color: #80c896;
+}
+
+/* Action buttons */
+.issue-review__actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+.issue-review__notice,
+.issue-review__error {
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+.issue-review__notice {
+  color: rgba(255, 255, 255, 0.45);
+  text-align: center;
+}
+
+.issue-review__error {
+  color: #ff6b6b;
+}
+
+/* Light mode */
+@media (prefers-color-scheme: light) {
+  .issue-review {
+    background-color: #ffffff;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  }
+
+  .issue-card {
+    background-color: #f5f5f7;
+    border-color: #e0e0e0;
+  }
+
+  .issue-card:not(.issue-card--rejected) {
+    border-color: rgba(100, 108, 255, 0.5);
+  }
+
+  .issue-card__description {
+    color: rgba(0, 0, 0, 0.5);
+  }
+
+  .issue-checkbox__ui {
+    border-color: #aaa;
+  }
+
+  .issue-state {
+    background-color: #ebebff;
+    color: #4444cc;
+  }
+
+  .issue-label {
+    background-color: #eaffea;
+    color: #2a7a2a;
+  }
+
+  .issue-review__notice {
+    color: rgba(0, 0, 0, 0.4);
+  }
+}
