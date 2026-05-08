@@ -5,10 +5,8 @@ export type Stage = 'form' | 'extracting' | 'review' | 'submitting' | 'done';
 
 export interface LinearIssue {
   title: string;
-  description?: string;
-  teamId: string;
-  projectId?: string;
-  stateId?: string;
+  description: string;
+  stateId: string;
   labelIds?: string[];
 }
 
