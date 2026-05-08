@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { API_BASE_URL } from "../../config";
 import { useLinearReview } from "./useLinearReview";
+import "./LinearIndex.css";
 
 type Team = {
   nodes: Node[];
@@ -71,32 +72,57 @@ const LinearIndex = () => {
     const noneChecked = extractedIssues.every((_, i) => rejectedIndices.has(i));
 
     return (
-      <>
-        {extractedIssues.map((issue, i) => (
-          <div key={i}>
-            <input
-              type="checkbox"
-              checked={!rejectedIndices.has(i)}
-              disabled={busy}
-              onChange={() => toggleIssue(i)}
-            />
-            <span>{issue.title}</span>
-            {issue.description && <p>{issue.description}</p>}
-            {issue.stateId && <span>{stateMap[issue.stateId]}</span>}
-            {issue.labelIds?.map((id) => (
-              <span key={id}>{labelMap[id]}</span>
-            ))}
-          </div>
-        ))}
-        {noneChecked && <p>No issues selected</p>}
-        {error && <p>{error}</p>}
-        <button onClick={submit} disabled={busy || noneChecked}>
-          Approve
-        </button>
-        <button onClick={cancel} disabled={busy}>
-          Cancel
-        </button>
-      </>
+      <div className="issue-review">
+        <div className="issue-list">
+          {extractedIssues.map((issue, i) => (
+            <div
+              key={i}
+              className={`issue-card${rejectedIndices.has(i) ? " issue-card--rejected" : ""}`}
+            >
+              <label className="issue-card__header">
+                <input
+                  type="checkbox"
+                  className="issue-checkbox"
+                  checked={!rejectedIndices.has(i)}
+                  disabled={busy}
+                  onChange={() => toggleIssue(i)}
+                />
+                <span className="issue-checkbox__ui" aria-hidden="true" />
+                <span className="issue-card__title">{issue.title}</span>
+              </label>
+              {issue.description && (
+                <p className="issue-card__description">{issue.description}</p>
+              )}
+              {(issue.stateId || issue.labelIds?.length) && (
+                <div className="issue-card__meta">
+                  {issue.stateId && (
+                    <span className="issue-state">
+                      {stateMap[issue.stateId]}
+                    </span>
+                  )}
+                  {issue.labelIds?.map((id) => (
+                    <span key={id} className="issue-label">
+                      {labelMap[id]}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+        {noneChecked && (
+          <p className="issue-review__notice">No issues selected</p>
+        )}
+        {error && <p className="issue-review__error">{error}</p>}
+        <div className="issue-review__actions">
+          <button onClick={cancel} disabled={busy}>
+            Cancel
+          </button>
+          <button onClick={submit} disabled={busy || noneChecked}>
+            Approve
+          </button>
+        </div>
+      </div>
     );
   }
 
