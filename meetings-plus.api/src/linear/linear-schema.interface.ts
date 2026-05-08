@@ -33,6 +33,16 @@ async function pullLinearMetadata(): Promise<LinearMetadata> {
   };
 }
 
+export const linearIssueBaseSchema = z.object({
+  title: z.string(),
+  description: z.string(),
+  stateId: z.string(),
+  labelIds: z.preprocess(
+    (v) => (v === null ? undefined : v),
+    z.array(z.string()).optional(),
+  ),
+});
+
 export function createLinearIssueSchema(
   statesInfo: string,
   labelsInfo: string,
@@ -73,5 +83,5 @@ export async function getLinearSchemas() {
   return { linearIssueSchema, linearIssuesSchema };
 }
 
-export type LinearIssue = z.infer<ReturnType<typeof createLinearIssueSchema>>;
+export type LinearIssue = z.infer<typeof linearIssueBaseSchema>;
 export type LinearIssues = { issues: LinearIssue[] };

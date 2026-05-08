@@ -2,17 +2,14 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { LinearClient } from '@linear/sdk';
 import z from 'zod';
 import { AiService } from 'src/ai/ai.service';
-import { getLinearSchemas, LinearIssue } from './linear-schema.interface';
+import {
+  getLinearSchemas,
+  LinearIssue,
+  linearIssueBaseSchema,
+} from './linear-schema.interface';
 
 const submitIssuesBodySchema = z.object({
-  issues: z.array(
-    z.object({
-      title: z.string(),
-      description: z.string(),
-      stateId: z.string(),
-      labelIds: z.array(z.string()).nullable().optional(),
-    }),
-  ),
+  issues: z.array(linearIssueBaseSchema),
   teamId: z.string().min(1),
   projectId: z.string(),
 });
@@ -75,7 +72,10 @@ export class LinearService {
       content,
       linearIssuesSchema,
     );
-    return { issues, meta };
+    const normalized = issues.map((issue) =>
+      linearIssueBaseSchema.parse(issue),
+    );
+    return { issues: normalized, meta };
   }
 
   async submitIssues(body: {
@@ -94,7 +94,7 @@ export class LinearService {
       ...(parsed.data.projectId !== ''
         ? { projectId: parsed.data.projectId }
         : {}),
-      ...(labelIds != null ? { labelIds } : {}),
+      ...(labelIds !== undefined ? { labelIds } : {}),
     }));
 
     await this.linearClient.createIssueBatch({ issues: issuesWithTeam });
